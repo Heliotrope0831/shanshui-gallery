@@ -1,12 +1,8 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc' // 修正点：加上 plugin-
 
+// vite.config.ts
 export default defineConfig({
-  base: './', // 确保资源路径正确，防止部署后白屏
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': '/src', // 允许你用 @ 代替 src 目录，代码更简洁
-    },
-  },
+  base: '/shanshui-gallery/', // 必须和你的 GitHub 仓库名完全一致，前后都要有斜杠
 })
