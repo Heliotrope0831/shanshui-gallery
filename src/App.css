@@ -1,0 +1,82 @@
+/* 基础设置：消除默认边距，使用优雅的衬线字体，类似截图的书卷气 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.shanshui-landing-page {
+  display: flex; /* 开启左右布局 */
+  min-height: 100vh; /* 撑满屏幕高度 */
+  background-color: #f8f7f5; /* 使用类似截图的米白色背景 */
+  font-family: 'Noto Serif SC', serif; /* 优雅的衬线字体，精准复刻 */
+}
+
+/* 左侧文字区域：占据剩余较少空间 (例如 45%) */
+.left-info-area {
+  flex: 4.5; 
+  padding: 80px 60px; /* 增加大留白 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 文字垂直居中 */
+  align-items: center; /* 标题和按钮居中对齐 */
+  max-width: 500px; /* 限制文字最大宽度，保持优雅 */
+}
+
+/* 左侧标题样式 */
+.main-title {
+  font-size: 64px; /* 标题要大，且有呼吸感 */
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+/* 左侧副标题样式，精准对齐 */
+.zh-sub-title {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+  line-height: 1.6;
+  text-align: center; /* 居中对齐 */
+}
+.en-sub-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 40px; /* 增加与下方的距离 */
+  text-align: center; /* 居中对齐 */
+}
+
+/* 按钮容器，精准居中 */
+.enter-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 精准复刻：点击进入按钮样式 */
+.plain-enter-btn {
+  background-color: white; /* 白色背景 */
+  color: black; /* 黑色文字 */
+  border: 2px solid black; /* 黑色描边 */
+  padding: 12px 24px; /* 适当内边距 */
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Noto Serif SC', serif; /* 使用优雅的衬线字体 */
+  transition: 0.3s; /* 淡淡的过渡效果 */
+}
+
+/* 可选：鼠标悬停效果，淡淡的灰色 */
+.plain-enter-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* 右侧图片区域：画卷主体 */
+.right-image-area {
+  flex: 5.5; /* 占据更多空间 (例如 55%) */
+  background-color: #fff; /* 图片区域使用白色背景，突出画卷感 */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 图片居中 */
+  border-left: 1px solid #eee; /* 可选：淡淡的分隔线 */
+}
+
+/* 图片本身样式 (关键：长幅、自适应) */
+.shanshui-scroll-image {
+  max-width: 100%; /* 图片宽度撑满父容器 */
+  height: auto; /* 高度自适应 */
+  object-fit: contain; /* 确保长图完整显示，不被剪切 */
+}
