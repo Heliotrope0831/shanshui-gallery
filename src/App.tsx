@@ -106,13 +106,12 @@ function App() {
     
     const formData = new FormData(e.currentTarget);
     const files = {
-      // 彻底去除了 imageFile 封面卡片的获取逻辑
       video: (e.currentTarget.querySelector('input[name="videoFile"]') as HTMLInputElement).files?.[0],
       albums: (e.currentTarget.querySelector('input[name="albumFiles"]') as HTMLInputElement).files
     };
 
     if (!files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传画册图片和演示视频！");
+      alert("请完整上传演示视频和画册图片");
       setIsSubmitting(false);
       return;
     }
@@ -132,7 +131,6 @@ function App() {
         return data.publicUrl;
       };
 
-      // 这里只需要传一次视频，然后同时赋给封面的 url 和内页的 url
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
 
@@ -141,8 +139,8 @@ function App() {
         student_id: formData.get('student_id'),
         window_type: formData.get('window_type'),
         poem: formData.get('poem'),
-        image_url: videoUrl, // 封面图直接复用视频链接
-        video_url: videoUrl, // 详情页视频复用视频链接
+        image_url: videoUrl, 
+        video_url: videoUrl, 
         album_images: albumUrls 
       }]);
       
@@ -159,15 +157,11 @@ function App() {
     }
   };
 
+  // 彻底使用标准矩形圆角，绝不裁剪
   const getWindowStyle = (type: string): React.CSSProperties => {
     switch (type) {
       case '圆形团扇': return { borderRadius: '50%', width: '180px', height: '180px' };
-      case '扇面': return { 
-        width: '240px', height: '140px', 
-        WebkitMaskImage: 'radial-gradient(ellipse 130% 180% at 50% 190%, black 45%, transparent 45.5%)',
-        maskImage: 'radial-gradient(ellipse 130% 180% at 50% 190%, black 45%, transparent 45.5%)',
-        backgroundColor: '#fff' 
-      };
+      case '扇面': return { width: '240px', height: '140px', borderRadius: '8px' };
       case '纵长立轴': return { width: '155px', height: '210px', borderRadius: '2px' };
       case '横长册页': return { width: '220px', height: '145px', borderRadius: '4px' };
       default: return { width: '180px', height: '180px', borderRadius: '4px' };
@@ -188,7 +182,6 @@ function App() {
           muted 
           loop 
           playsInline 
-          webkit-playsinline="true"
           preload="auto"
           onError={(e) => {
             const target = e.target as HTMLVideoElement;
@@ -368,9 +361,7 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 
-                {/* 彻底删除了原有的“封面卡片”输入框！只留画册和视频 */}
-                
-                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图，多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
+                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
                 <div style={uB}><p>演示视频 (将自动同时作为封面和内页展示)</p><input type="file" name="videoFile" accept="video/*" required /></div>
                 
                 <button 
