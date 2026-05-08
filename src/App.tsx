@@ -106,18 +106,19 @@ function App() {
     
     const formData = new FormData(e.currentTarget);
     const files = {
+      image: (e.currentTarget.querySelector('input[name="imageFile"]') as HTMLInputElement).files?.[0],
       video: (e.currentTarget.querySelector('input[name="videoFile"]') as HTMLInputElement).files?.[0],
       albums: (e.currentTarget.querySelector('input[name="albumFiles"]') as HTMLInputElement).files
     };
 
-    if (!files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传演示视频和画册图片");
+    if (!files.image || !files.video || !files.albums || files.albums.length === 0) {
+      alert("请完整上传封面视频、演示视频和画册图片");
       setIsSubmitting(false);
       return;
     }
 
-    if (files.video.size > 50 * 1024 * 1024) {
-      alert("视频不能超过50MB，请压缩后再上传！");
+    if (files.image.size > 50 * 1024 * 1024 || files.video.size > 50 * 1024 * 1024) {
+      alert("单个视频不能超过50MB，请压缩后再上传！");
       setIsSubmitting(false);
       return;
     }
@@ -131,6 +132,7 @@ function App() {
         return data.publicUrl;
       };
 
+      const imageUrl = await uploadFile(files.image); 
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
 
@@ -139,7 +141,7 @@ function App() {
         student_id: formData.get('student_id'),
         window_type: formData.get('window_type'),
         poem: formData.get('poem'),
-        image_url: videoUrl, 
+        image_url: imageUrl, 
         video_url: videoUrl, 
         album_images: albumUrls 
       }]);
@@ -157,7 +159,6 @@ function App() {
     }
   };
 
-  // 彻底使用标准矩形圆角，绝不裁剪
   const getWindowStyle = (type: string): React.CSSProperties => {
     switch (type) {
       case '圆形团扇': return { borderRadius: '50%', width: '180px', height: '180px' };
@@ -168,6 +169,7 @@ function App() {
     }
   };
 
+  // 渲染函数：优化了视频性能，防止白屏
   const renderItemMedia = (url: string) => {
     if (!url) return <div style={{width:'100%', height:'100%', backgroundColor:'#eee'}} />;
     
@@ -182,7 +184,7 @@ function App() {
           muted 
           loop 
           playsInline 
-          preload="auto"
+          preload="metadata" // 优化：仅预加载元数据，防止浏览器卡死
           onError={(e) => {
             const target = e.target as HTMLVideoElement;
             const parent = target.parentElement;
@@ -361,8 +363,11 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 
+                {/* 恢复为分开上传 */}
+                <div style={uB}><p>封面视频</p><input type="file" name="imageFile" accept="video/*,image/*" required /></div>
+                
                 <div style={uB}><p>画册页 (确保第7张为带红框开口的底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
-                <div style={uB}><p>演示视频 (将自动同时作为封面和内页展示)</p><input type="file" name="videoFile" accept="video/*" required /></div>
+                <div style={uB}><p>演示视频 (用于详情页嵌入)</p><input type="file" name="videoFile" accept="video/*" required /></div>
                 
                 <button 
                   type="submit" 
