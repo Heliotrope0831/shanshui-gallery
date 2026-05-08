@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // ==========================================
-// 1. 样式锁定区
+// 1. 样式锁定区 (Updated for tidy grid)
 // ==========================================
 const sh: React.CSSProperties = { fontSize: '16px', marginBottom: '15px', borderLeft: '4px solid #000', paddingLeft: '10px' };
 const imgBox: React.CSSProperties = { backgroundColor: '#fff', padding: '30px', border: '1px solid #ddd', marginBottom: '20px' };
@@ -112,7 +112,7 @@ function App() {
     };
 
     if (!files.image || !files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传封面视频、演示视频和画册图片");
+      alert("请完整上传封面视频、画册页和演示视频！");
       setIsSubmitting(false);
       return;
     }
@@ -159,17 +159,17 @@ function App() {
     }
   };
 
+  // 🔴 关键修复点 1：窗口依然保持各自比例，但彻底去除了 mask渐变，保证不隐形。
   const getWindowStyle = (type: string): React.CSSProperties => {
     switch (type) {
       case '圆形团扇': return { borderRadius: '50%', width: '180px', height: '180px' };
-      case '扇面': return { width: '240px', height: '140px', borderRadius: '8px' };
+      case '扇面': return { width: '240px', height: '140px', borderRadius: '4px' }; 
       case '纵长立轴': return { width: '155px', height: '210px', borderRadius: '2px' };
       case '横长册页': return { width: '220px', height: '145px', borderRadius: '4px' };
       default: return { width: '180px', height: '180px', borderRadius: '4px' };
     }
   };
 
-  // 渲染函数：优化了视频性能，防止白屏
   const renderItemMedia = (url: string) => {
     if (!url) return <div style={{width:'100%', height:'100%', backgroundColor:'#eee'}} />;
     
@@ -184,7 +184,8 @@ function App() {
           muted 
           loop 
           playsInline 
-          preload="metadata" // 优化：仅预加载元数据，防止浏览器卡死
+          webkit-playsinline="true"
+          preload="auto"
           onError={(e) => {
             const target = e.target as HTMLVideoElement;
             const parent = target.parentElement;
@@ -286,14 +287,31 @@ function App() {
         {contentMode === 'works' && (
           <div style={{ padding: '30px' }}>
             <div style={{ textAlign: 'right', marginBottom: '15px', fontSize: '12px', color: '#999' }}>找到 {filteredWorks.length} 件相关作品</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '40px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
               {filteredWorks.map((work) => (
-                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center' }}>
-                  <div style={{ height: '230px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '12px' }}>
-                    <div style={{ overflow: 'hidden', border:'1px solid #eee', backgroundColor:'#000', ...getWindowStyle(work.window_type) }}>
+                // 🔴 关键修复点 2：将整个卡片包装成统一尺寸（标准正方形展位），看起来非常整齐。
+                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+                  
+                  {/* 这个是统一的展位方框：正方形，有背景和边框 */}
+                  <div style={{ 
+                    aspectRatio: '1/1', // 强制正方形
+                    display: 'flex', 
+                    alignItems: 'center', // 垂直居中核心
+                    justifyContent: 'center', // 水平居中核心
+                    overflow: 'hidden', // 遮罩多余
+                    border:'1px solid #ddd', 
+                    backgroundColor:'#fff',
+                    padding: '10px',
+                    borderRadius: '4px',
+                    marginBottom: '12px',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
+                  }}>
+                    {/* 不管里面是什么形状，都在白方块里居中显示 */}
+                    <div style={{ ...getWindowStyle(work.window_type), overflow:'hidden', backgroundColor:'#000' }}>
                       {renderItemMedia(work.image_url)}
                     </div>
                   </div>
+
                   <div style={{ fontSize: '11px' }}>
                     <p style={{ fontWeight: 'bold', margin: '0' }}>{work.name} / {work.student_id}</p>
                     <p style={{ color: '#999', margin: '3px 0' }}>{work.window_type}</p>
@@ -363,11 +381,9 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 
-                {/* 恢复为分开上传 */}
-                <div style={uB}><p>封面视频</p><input type="file" name="imageFile" accept="video/*,image/*" required /></div>
-                
-                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
-                <div style={uB}><p>演示视频 (用于详情页嵌入)</p><input type="file" name="videoFile" accept="video/*" required /></div>
+                <div style={uB}><p>封面卡片 (必须上传图片)</p><input type="file" name="imageFile" accept="image/*" required /></div>
+                <div style={uB}><p>画册页 (多选，确保第7张为底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
+                <div style={uB}><p>演示视频 (用于详情页播放)</p><input type="file" name="videoFile" accept="video/*" required /></div>
                 
                 <button 
                   type="submit" 
