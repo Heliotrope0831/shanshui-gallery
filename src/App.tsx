@@ -106,19 +106,19 @@ function App() {
     
     const formData = new FormData(e.currentTarget);
     const files = {
-      image: (e.currentTarget.querySelector('input[name="imageFile"]') as HTMLInputElement).files?.[0],
+      // 彻底去除了 imageFile 封面卡片的获取逻辑
       video: (e.currentTarget.querySelector('input[name="videoFile"]') as HTMLInputElement).files?.[0],
       albums: (e.currentTarget.querySelector('input[name="albumFiles"]') as HTMLInputElement).files
     };
 
-    if (!files.image || !files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传成果资料（包含封面视频、画册、演示视频）");
+    if (!files.video || !files.albums || files.albums.length === 0) {
+      alert("请完整上传画册图片和演示视频！");
       setIsSubmitting(false);
       return;
     }
 
-    if (files.image.size > 50 * 1024 * 1024 || files.video.size > 50 * 1024 * 1024) {
-      alert("单个视频不能超过50MB，请压缩后再上传！");
+    if (files.video.size > 50 * 1024 * 1024) {
+      alert("视频不能超过50MB，请压缩后再上传！");
       setIsSubmitting(false);
       return;
     }
@@ -132,17 +132,17 @@ function App() {
         return data.publicUrl;
       };
 
-      const imageUrl = await uploadFile(files.image); 
+      // 这里只需要传一次视频，然后同时赋给封面的 url 和内页的 url
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
 
-      await supabase.from('works').insert([{
+      const { error: insertError } = await supabase.from('works').insert([{
         name: formData.get('name'),
         student_id: formData.get('student_id'),
         window_type: formData.get('window_type'),
         poem: formData.get('poem'),
-        image_url: imageUrl,
-        video_url: videoUrl,
+        image_url: videoUrl, // 封面图直接复用视频链接
+        video_url: videoUrl, // 详情页视频复用视频链接
         album_images: albumUrls 
       }]);
       
@@ -296,20 +296,7 @@ function App() {
                 <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ height: '230px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '12px' }}>
                     <div style={{ overflow: 'hidden', border:'1px solid #eee', backgroundColor:'#000', ...getWindowStyle(work.window_type) }}>
-                      {work.video_url ? (
-                        <video 
-                          src={work.video_url} 
-                          poster={work.image_url}
-                          autoPlay loop muted playsInline 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-                          onError={(e) => {
-                            const target = e.target as HTMLVideoElement;
-                            target.outerHTML = `<img src="${work.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
-                          }}
-                        />
-                      ) : (
-                        <img src={work.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="封面" />
-                      )}
+                      {renderItemMedia(work.image_url)}
                     </div>
                   </div>
                   <div style={{ fontSize: '11px' }}>
@@ -381,10 +368,10 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 
-                <div style={uB}><p>封面视频 (替代原封面卡片图)</p><input type="file" name="imageFile" accept="video/*" required /></div>
+                {/* 彻底删除了原有的“封面卡片”输入框！只留画册和视频 */}
                 
-                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
-                <div style={uB}><p>演示视频 (用于嵌入在第7张底图中)</p><input type="file" name="videoFile" accept="video/*" required /></div>
+                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图，多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
+                <div style={uB}><p>演示视频 (将自动同时作为封面和内页展示)</p><input type="file" name="videoFile" accept="video/*" required /></div>
                 
                 <button 
                   type="submit" 
