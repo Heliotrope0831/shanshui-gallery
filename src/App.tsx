@@ -159,15 +159,15 @@ function App() {
     }
   };
 
-  // 恢复原始比例：保留阴影，去除统一白框。扇面继续使用安全的圆角矩形防白屏。
+  // 🔴 极限紧凑布局：微缩所有作品体积，减少留白
   const getWindowStyle = (type: string): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = { overflow: 'hidden', backgroundColor: '#000', border: '1px solid #eee', boxShadow: '0 4px 15px rgba(0,0,0,0.08)' };
+    const baseStyle: React.CSSProperties = { overflow: 'hidden', backgroundColor: '#000', border: '1px solid #eee', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' };
     switch (type) {
-      case '圆形团扇': return { ...baseStyle, borderRadius: '50%', width: '180px', height: '180px' };
-      case '扇面': return { ...baseStyle, width: '240px', height: '140px', borderRadius: '8px' };
-      case '纵长立轴': return { ...baseStyle, width: '155px', height: '210px', borderRadius: '2px' };
-      case '横长册页': return { ...baseStyle, width: '220px', height: '145px', borderRadius: '4px' };
-      default: return { ...baseStyle, width: '180px', height: '180px', borderRadius: '4px' };
+      case '圆形团扇': return { ...baseStyle, borderRadius: '50%', width: '150px', height: '150px' };
+      case '扇面': return { ...baseStyle, width: '200px', height: '120px', borderRadius: '8px' };
+      case '纵长立轴': return { ...baseStyle, width: '120px', height: '180px', borderRadius: '2px' };
+      case '横长册页': return { ...baseStyle, width: '200px', height: '130px', borderRadius: '4px' };
+      default: return { ...baseStyle, width: '150px', height: '150px', borderRadius: '4px' };
     }
   };
 
@@ -185,7 +185,7 @@ function App() {
           muted 
           loop 
           playsInline 
-          preload="metadata" // 防卡顿
+          preload="metadata"
           onError={(e) => {
             const target = e.target as HTMLVideoElement;
             const parent = target.parentElement;
@@ -287,27 +287,30 @@ function App() {
         {contentMode === 'works' && (
           <div style={{ padding: '40px' }}>
             <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: '13px', color: '#999' }}>找到 {filteredWorks.length} 件相关作品</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '40px' }}>
+            
+            {/* 🔴 修复点 1：压缩网格宽度和间距，横向排得更密 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '30px 15px' }}>
               {filteredWorks.map((work) => (
-                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s', ...{ ':hover': { transform: 'translateY(-5px)' } } as any }}>
+                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s', ...{ ':hover': { transform: 'translateY(-3px)' } } as any }}>
                   
-                  {/* 恢复原状：去掉白色大外框，使用隐形容器，确保文字平齐且原汁原味 */}
+                  {/* 🔴 修复点 2：高度收敛到 180px，并采用 flex-end 让图片稳稳坐落在底部 */}
                   <div style={{ 
-                    height: '240px', // 隐形占位符，保证所有作品所占高度一样，底部文字平齐
+                    height: '180px', 
                     display: 'flex', 
-                    alignItems: 'center', 
+                    alignItems: 'flex-end', // 图片绝对贴近文字
                     justifyContent: 'center', 
-                    marginBottom: '15px' 
+                    marginBottom: '8px' // 极小化图片和文字的间距
                   }}>
                     <div style={getWindowStyle(work.window_type)}>
                       {renderItemMedia(work.image_url)}
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '12px', lineHeight: '1.6' }}>
+                  {/* 🔴 修复点 3：文字行高收紧 */}
+                  <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                     <p style={{ fontWeight: 'bold', margin: '0', color: '#222', fontSize: '13px' }}>{work.name} / {work.student_id}</p>
-                    <p style={{ color: '#999', margin: '4px 0' }}>{work.window_type}</p>
-                    <p style={{ fontStyle: 'italic', color: '#666', margin: '0', padding: '0 10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{work.poem}</p>
+                    <p style={{ color: '#999', margin: '2px 0' }}>{work.window_type}</p>
+                    <p style={{ fontStyle: 'italic', color: '#666', margin: '0', padding: '0 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{work.poem}</p>
                   </div>
 
                 </div>
