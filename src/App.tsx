@@ -11,7 +11,7 @@ const iS: React.CSSProperties = { width: '100%', padding: '12px', marginBottom: 
 const uB: React.CSSProperties = { marginBottom: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', fontSize: '11px' };
 
 // ==========================================
-// 2. 课程内容锁定区 (恢复全部细节)
+// 2. 课程内容锁定区
 // ==========================================
 const BASIC_INFO = (
   <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '1.8', color: '#666', marginLeft: '5px' }}>
@@ -82,16 +82,12 @@ function App() {
 
   const studentNames = Array.from(new Set(works.map(w => w.name)));
 
-  // --- 关键修改：管理员权限删除逻辑 ---
   const handleDelete = async (id: number) => {
     const password = window.prompt("请输入管理员删除密码：");
-    
-    // 您可以根据需要修改此处的密码 "admin123"
     if (password !== "admin123") { 
       alert("密码错误！只有老师和助教拥有删除权限。");
       return;
     }
-
     if (!window.confirm("确认要永久删除这份作业吗？")) return;
 
     try {
@@ -140,7 +136,7 @@ function App() {
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
 
-      const { error: insertError } = await supabase.from('works').insert([{
+      await supabase.from('works').insert([{
         name: formData.get('name'),
         student_id: formData.get('student_id'),
         window_type: formData.get('window_type'),
@@ -163,7 +159,6 @@ function App() {
     }
   };
 
-  // 形状比例锁定区
   const getWindowStyle = (type: string): React.CSSProperties => {
     switch (type) {
       case '圆形团扇': return { borderRadius: '50%', width: '180px', height: '180px' };
@@ -179,11 +174,9 @@ function App() {
     }
   };
 
-  // 强健的视频/图片自适应渲染组件
   const renderItemMedia = (url: string) => {
     if (!url) return <div style={{width:'100%', height:'100%', backgroundColor:'#eee'}} />;
     
-    // 如果后缀是常见视频格式，则渲染video标签
     const isVideo = /\.(mp4|mov|webm|ogg|m4v)/i.test(url.split('?')[0]);
     if (isVideo) {
       return (
@@ -242,7 +235,6 @@ function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* 1. 左侧固定栏 */}
       <div style={{ width: '25%', padding: '30px', position: 'fixed', height: '100vh', borderRight: '1px solid #eee', overflowY: 'auto', boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '32px', margin: '0 0 25px 0', fontWeight: 'bold', cursor: 'pointer', borderBottom: '1px solid #000', paddingBottom:'10px' }} onClick={() => { setContentMode('works'); setFilterName(null); setFilterType('全部'); }}>山水图窗</h1>
         
@@ -273,7 +265,6 @@ function App() {
                 ))}
               </div>
             </section>
-
             <section style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>窗型筛选</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -289,13 +280,12 @@ function App() {
           <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
           <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
             <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none', color: contentMode === 'works' ? '#333' : '#666' }}>• 作业展示</li>
-            <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>• 作业提交</li>
+            <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline', color: '#666' }}>• 作业提交</li>
           </ul>
         </section>
         <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px' }}>返回封面</button>
       </div>
 
-      {/* 2. 右侧动态展示区 */}
       <div style={{ marginLeft: '25%', flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: '#f9f9f9', boxSizing: 'border-box' }}>
         
         {contentMode === 'works' && (
@@ -306,7 +296,20 @@ function App() {
                 <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ height: '230px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '12px' }}>
                     <div style={{ overflow: 'hidden', border:'1px solid #eee', backgroundColor:'#000', ...getWindowStyle(work.window_type) }}>
-                      {renderItemMedia(work.image_url)}
+                      {work.video_url ? (
+                        <video 
+                          src={work.video_url} 
+                          poster={work.image_url}
+                          autoPlay loop muted playsInline 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+                          onError={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            target.outerHTML = `<img src="${work.image_url}" style="width:100%;height:100%;object-fit:cover;display:block;" />`;
+                          }}
+                        />
+                      ) : (
+                        <img src={work.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="封面" />
+                      )}
                     </div>
                   </div>
                   <div style={{ fontSize: '11px' }}>
@@ -320,7 +323,6 @@ function App() {
           </div>
         )}
 
-        {/* 锁定内容页 */}
         {contentMode === 'goal' && <div style={{ padding: '40px 60px' }}><h2 style={pageH}>· 课程目标</h2>{COURSE_GOAL}</div>}
         {contentMode === 'schedule' && <div style={{ padding: '40px 60px' }}><h2 style={pageH}>· 课程安排</h2>{COURSE_SCHEDULE}</div>}
         {contentMode === 'topic' && (
@@ -331,7 +333,6 @@ function App() {
         )}
       </div>
 
-      {/* 3. 详情页悬浮窗 */}
       {selectedWork && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#fff', zIndex: 2000, overflowY: 'auto' }}>
           <div style={{ position: 'fixed', top: '25px', right: '40px', display: 'flex', gap: '20px', alignItems: 'center', zIndex: 2100 }}>
@@ -356,7 +357,6 @@ function App() {
               {Array.isArray(selectedWork.album_images) && selectedWork.album_images.map((url, i) => (
                 <div key={i} style={{ position: 'relative', width: '100%', backgroundColor: '#f9f9f9' }}>
                    <img src={url} style={{ width: '100%', display: 'block', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }} alt={`页码${i+1}`} />
-                   {/* 关键修复点：为阴影添加引号，修复编译错误 */}
                    {i === 6 && (
                      <div style={{ position: 'absolute', top: '15%', left: '40%', width: '55%', height: '72%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                         <video src={selectedWork.video_url} controls autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', boxShadow: '0 0 30px rgba(0,0,0,0.5)' }} />
@@ -369,7 +369,6 @@ function App() {
         </div>
       )}
 
-      {/* 4. 上传弹窗 */}
       {showUpload && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <div style={{ backgroundColor: '#fff', padding: '40px', width: '450px', borderRadius: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -382,7 +381,8 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 
-                <div style={uB}><p>封面卡片 (替代原封面卡片图)</p><input type="file" name="imageFile" accept="video/*" required /></div>
+                <div style={uB}><p>封面视频 (替代原封面卡片图)</p><input type="file" name="imageFile" accept="video/*" required /></div>
+                
                 <div style={uB}><p>画册页 (确保第7张为带红框开口的底图)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
                 <div style={uB}><p>演示视频 (用于嵌入在第7张底图中)</p><input type="file" name="videoFile" accept="video/*" required /></div>
                 
