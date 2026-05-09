@@ -159,7 +159,6 @@ function App() {
     }
   };
 
-  // 🔴 极限紧凑布局：微缩所有作品体积，减少留白
   const getWindowStyle = (type: string): React.CSSProperties => {
     const baseStyle: React.CSSProperties = { overflow: 'hidden', backgroundColor: '#000', border: '1px solid #eee', boxShadow: '0 3px 10px rgba(0,0,0,0.06)' };
     switch (type) {
@@ -254,13 +253,26 @@ function App() {
           <>
             <section style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>学生姓名</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <span onClick={() => { setFilterName(null); setFilterType('全部'); }} style={{ cursor: 'pointer', fontSize: '14px', color: filterName === null ? '#333' : '#999' }}>全部学生</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 0' }}>
+                <div 
+                  onClick={() => { setFilterName(null); setFilterType('全部'); }} 
+                  style={{ width: '33.33%', cursor: 'pointer', fontSize: '13px', color: filterName === null ? '#333' : '#999', paddingRight: '5px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  全部学生
+                </div>
                 {studentNames.map(name => (
-                  <span key={name} onClick={() => { setFilterName(name); setFilterType('全部'); }} style={{ cursor: 'pointer', fontSize: '14px', color: filterName === name ? '#333' : '#999' }}>{name}</span>
+                  <div 
+                    key={name} 
+                    title={name} 
+                    onClick={() => { setFilterName(name); setFilterType('全部'); }} 
+                    style={{ width: '33.33%', cursor: 'pointer', fontSize: '13px', color: filterName === name ? '#333' : '#999', paddingRight: '5px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  >
+                    {name}
+                  </div>
                 ))}
               </div>
             </section>
+            
             <section style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>窗型筛选</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -288,25 +300,22 @@ function App() {
           <div style={{ padding: '40px' }}>
             <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: '13px', color: '#999' }}>找到 {filteredWorks.length} 件相关作品</div>
             
-            {/* 🔴 修复点 1：压缩网格宽度和间距，横向排得更密 */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '30px 15px' }}>
               {filteredWorks.map((work) => (
                 <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s', ...{ ':hover': { transform: 'translateY(-3px)' } } as any }}>
                   
-                  {/* 🔴 修复点 2：高度收敛到 180px，并采用 flex-end 让图片稳稳坐落在底部 */}
                   <div style={{ 
                     height: '180px', 
                     display: 'flex', 
-                    alignItems: 'flex-end', // 图片绝对贴近文字
+                    alignItems: 'flex-end', 
                     justifyContent: 'center', 
-                    marginBottom: '8px' // 极小化图片和文字的间距
+                    marginBottom: '8px' 
                   }}>
                     <div style={getWindowStyle(work.window_type)}>
                       {renderItemMedia(work.image_url)}
                     </div>
                   </div>
 
-                  {/* 🔴 修复点 3：文字行高收紧 */}
                   <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                     <p style={{ fontWeight: 'bold', margin: '0', color: '#222', fontSize: '13px' }}>{work.name} / {work.student_id}</p>
                     <p style={{ color: '#999', margin: '2px 0' }}>{work.window_type}</p>
