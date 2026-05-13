@@ -40,39 +40,10 @@ const COURSE_GOAL = (
   </div>
 );
 
-// 🌟 这里的图片请放在您项目的 public 文件夹下，然后在此处写上对应的文件名即可
-const MANUAL_IMAGES = [
-  '/manual_01.jpg', 
-  '/manual_02.jpg',
-  '/manual_03.jpg',
-  '/manual_04.jpg',
-  '/manual_05.jpg',
-  '/manual_06.jpg',
-  '/manual_07.jpg',
-  '/manual_08.jpg',
-  '/manual_09.jpg',
-  '/manual_010.jpg',
-  '/manual_011.jpg',
-  '/manual_012.jpg',
-  '/manual_013.jpg',
-  '/manual_014.jpg',
-  '/manual_015.jpg',
-  '/manual_016.jpg',
-  '/manual_017.jpg',
-  '/manual_018.jpg',
-  '/manual_019.jpg',
-  '/manual_020.jpg',
-  '/manual_021.jpg',
-  '/manual_022.jpg',
-  '/manual_023.jpg',
-  '/manual_024.jpg',
-  '/manual_025.jpg',
-  '/manual_026.jpg',
-  '/manual_027.jpg',
-  '/manual_028.jpg',
-  '/manual_029.jpg',
-  '/manual_030.jpg',
-];
+// 🌟 修正：自动生成 30 张图片的文件名数组 (假设文件名为 manual_01.jpg 到 manual_30.jpg)
+const MANUAL_IMAGES = Array.from({ length: 30 }, (_, i) => 
+  `/manual_${(i + 1).toString().padStart(2, '0')}.jpg`
+);
 
 // ==========================================
 // 3. 主程序逻辑
@@ -90,8 +61,6 @@ interface Work {
 
 function App() {
   const [page, setPage] = useState<'home' | 'gallery'>('home');
-  
-  // 🌟 修改点 1: 首页改回作品展示 'works'
   const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal' | 'manual-view'>('works');
   
   const [currentManualPage, setCurrentManualPage] = useState(0);
@@ -225,7 +194,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff', fontFamily: 'sans-serif' }}>
-      
+      {/* 左侧边栏 */}
       <div style={{ width: '25%', padding: '30px', position: 'fixed', height: '100vh', borderRight: '1px solid #eee', overflowY: 'auto', boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '32px', margin: '0 0 25px 0', fontWeight: 'bold', cursor: 'pointer', borderBottom: '1px solid #000', paddingBottom:'10px' }} onClick={() => { setContentMode('works'); setFilterName(null); setFilterType('全部'); }}>山水图窗</h1>
         
@@ -244,7 +213,6 @@ function App() {
 
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
-        {/* 🌟 山水画谱 点击项 */}
         <section style={{ marginBottom: '25px' }}>
           <h2 
             onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
@@ -280,7 +248,7 @@ function App() {
                   onClick={() => { setFilterName(null); setFilterType('全部'); }} 
                   style={{ width: '33.33%', cursor: 'pointer', fontSize: '13px', color: filterName === null ? '#333' : '#999', paddingRight: '5px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
-                  全部学生
+                  全部
                 </div>
                 {studentNames.map(name => (
                   <div 
@@ -293,21 +261,13 @@ function App() {
                 ))}
               </div>
             </section>
-            
-            <section style={{ marginBottom: '30px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>窗型筛选</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                {['全部', '扇面', '圆形团扇', '横长册页', '纵长立轴'].map(type => (
-                  <button key={type} onClick={() => { setFilterType(type); setFilterName(null); }} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: filterType === type ? '#333' : '#fff', color: filterType === type ? '#fff' : '#666', cursor: 'pointer', fontSize: '11px' }}>{type}</button>
-                ))}
-              </div>
-            </section>
           </>
         )}
 
         <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px', marginTop: '20px' }}>返回封面</button>
       </div>
 
+      {/* 右侧主内容区 */}
       <div style={{ marginLeft: '25%', flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: '#f9f9f9', boxSizing: 'border-box' }}>
         
         {contentMode === 'works' && (
@@ -315,14 +275,14 @@ function App() {
             <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: '13px', color: '#999' }}>找到 {filteredWorks.length} 件相关作品</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '30px 15px' }}>
               {filteredWorks.map((work) => (
-                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s' }}>
+                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center' }}>
                   <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '8px' }}>
                     <div style={getWindowStyle(work.window_type)}>{renderItemMedia(work.image_url)}</div>
                   </div>
                   <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                     <p style={{ fontWeight: 'bold', margin: '0', color: '#222', fontSize: '13px' }}>{work.name} / {work.student_id}</p>
                     <p style={{ color: '#999', margin: '2px 0' }}>{work.window_type}</p>
-                    <p style={{ fontStyle: 'italic', color: '#666', margin: '0', padding: '0 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{work.poem}</p>
+                    <p style={{ fontStyle: 'italic', color: '#666', margin: '0' }}>{work.poem}</p>
                   </div>
                 </div>
               ))}
@@ -330,25 +290,33 @@ function App() {
           </div>
         )}
 
-        {/* 🌟 山水画谱 内容区 (实现左右翻页) */}
+        {/* 🌟 修正：山水画谱内容显示逻辑 */}
         {contentMode === 'manual-view' && (
           <div style={{ padding: '40px 60px', boxSizing: 'border-box', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <h2 style={pageH}>· 山水画谱</h2>
             <div style={{ 
               backgroundColor: '#fff', padding: '20px', borderRadius: '4px', 
               boxSizing: 'border-box', flex: 1, display: 'flex', flexDirection: 'column', 
-              alignItems: 'center', justifyContent: 'center', position: 'relative' 
+              alignItems: 'center', justifyContent: 'center', position: 'relative',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
             }}>
               <button style={{ ...flipBtnS, left: '20px' }} onClick={() => changeManualPage(-1)}>&#10094;</button>
+              
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 <img 
                   key={currentManualPage}
                   src={MANUAL_IMAGES[currentManualPage]} 
-                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
-                  alt={`画谱第 ${currentManualPage + 1} 页`} 
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', transition: 'opacity 0.3s' }} 
+                  alt={`画谱第 ${currentManualPage + 1} 页`}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found'; // 路径错误时的占位图
+                  }}
                 />
               </div>
+
               <button style={{ ...flipBtnS, right: '20px' }} onClick={() => changeManualPage(1)}>&#10095;</button>
+              
               <div style={{ position: 'absolute', bottom: '15px', fontSize: '14px', color: '#999', fontWeight: 'bold' }}>
                 {currentManualPage + 1} / {MANUAL_IMAGES.length}
               </div>
@@ -365,13 +333,11 @@ function App() {
         )}
       </div>
 
+      {/* 详情弹窗 */}
       {selectedWork && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#fff', zIndex: 2000, overflowY: 'auto' }}>
           <div style={{ position: 'fixed', top: '25px', right: '40px', display: 'flex', gap: '20px', alignItems: 'center', zIndex: 2100 }}>
-            {window.location.search.includes('admin=true') && (
-              <button onClick={() => handleDelete(selectedWork.id!)} style={{ padding: '6px 12px', backgroundColor: '#f0f0f0', color: '#999', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>删除该作业</button>
-            )}
-            <button onClick={() => setSelectedWork(null)} style={{ fontSize: '24px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>✕</button>
+             <button onClick={() => setSelectedWork(null)} style={{ fontSize: '24px', border: 'none', background: 'none', cursor: 'pointer' }}>✕</button>
           </div>
           <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 20px' }}>
             <header style={{ textAlign: 'center', marginBottom: '60px' }}>
@@ -380,11 +346,11 @@ function App() {
             </header>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
               {Array.isArray(selectedWork.album_images) && selectedWork.album_images.map((url, i) => (
-                <div key={i} style={{ position: 'relative', width: '100%', backgroundColor: '#f9f9f9' }}>
-                   <img src={url} style={{ width: '100%', display: 'block', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }} alt={`页码${i+1}`} />
+                <div key={i} style={{ position: 'relative', width: '100%' }}>
+                   <img src={url} style={{ width: '100%', display: 'block' }} alt={`页码${i+1}`} />
                    {i === 6 && (
-                     <div style={{ position: 'absolute', top: '15%', left: '40%', width: '55%', height: '72%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                        <video src={selectedWork.video_url} controls autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                     <div style={{ position: 'absolute', top: '15%', left: '40%', width: '55%', height: '72%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <video src={selectedWork.video_url} controls autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%' }} />
                      </div>
                    )}
                 </div>
@@ -394,6 +360,7 @@ function App() {
         </div>
       )}
 
+      {/* 上传弹窗 */}
       {showUpload && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <div style={{ backgroundColor: '#fff', padding: '40px', width: '450px', borderRadius: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -406,12 +373,12 @@ function App() {
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
                 <div style={uB}><p>封面视频 (支持图片或视频)</p><input type="file" name="imageFile" accept="video/*,image/*" required /></div>
-                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图，多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
-                <div style={uB}><p>演示视频 (用于详情页嵌入)</p><input type="file" name="videoFile" accept="video/*" required /></div>
-                <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '16px', background: isSubmitting ? '#999' : '#000', color: '#fff', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: 'bold', borderRadius: '12px' }}>
+                <div style={uB}><p>画册页 (多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
+                <div style={uB}><p>演示视频</p><input type="file" name="videoFile" accept="video/*" required /></div>
+                <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '16px', background: isSubmitting ? '#999' : '#000', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '12px' }}>
                   {isSubmitting ? '正在上传中...' : '确认发布'}
                 </button>
-                <button type="button" onClick={()=>setShowUpload(false)} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}>取消</button>
+                <button type="button" onClick={()=>setShowUpload(false)} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: '#999' }}>取消</button>
              </form>
           </div>
         </div>
