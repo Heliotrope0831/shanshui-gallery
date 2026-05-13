@@ -10,6 +10,14 @@ const pageH: React.CSSProperties = { fontSize: '20px', fontWeight: 'bold', fontS
 const iS: React.CSSProperties = { width: '100%', padding: '12px', marginBottom: '15px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' };
 const uB: React.CSSProperties = { marginBottom: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', fontSize: '11px' };
 
+// 翻页按钮样式
+const flipBtnS: React.CSSProperties = {
+  position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+  backgroundColor: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none',
+  padding: '20px 10px', cursor: 'pointer', fontSize: '24px', zIndex: 10,
+  borderRadius: '4px', transition: 'background 0.3s'
+};
+
 // ==========================================
 // 2. 课程内容锁定区
 // ==========================================
@@ -32,6 +40,15 @@ const COURSE_GOAL = (
   </div>
 );
 
+// 🌟 这里的图片请放在您项目的 public 文件夹下，然后在此处写上对应的文件名即可
+const MANUAL_IMAGES = [
+  '/manual_01.jpg', 
+  '/manual_02.jpg',
+  '/manual_03.jpg',
+  '/manual_04.jpg',
+  '/manual_05.jpg',
+];
+
 // ==========================================
 // 3. 主程序逻辑
 // ==========================================
@@ -48,8 +65,11 @@ interface Work {
 
 function App() {
   const [page, setPage] = useState<'home' | 'gallery'>('home');
-  // 增加 'window-view' 模式
-  const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal' | 'window-view'>('works');
+  
+  // 🌟 修改点 1: 首页改回作品展示 'works'
+  const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal' | 'manual-view'>('works');
+  
+  const [currentManualPage, setCurrentManualPage] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,21 +93,24 @@ function App() {
 
   const studentNames = Array.from(new Set(works.map(w => w.name)));
 
+  const changeManualPage = (direction: number) => {
+    setCurrentManualPage((prev) => {
+      const nextP = prev + direction;
+      if (nextP < 0) return MANUAL_IMAGES.length - 1;
+      if (nextP >= MANUAL_IMAGES.length) return 0;
+      return nextP;
+    });
+  };
+
   const handleDelete = async (id: number) => {
     const password = window.prompt("请输入管理员删除密码：");
     if (password !== "admin123") { 
-      alert("密码错误！只有老师和助教拥有删除权限。");
+      alert("密码错误！");
       return;
     }
-    if (!window.confirm("确认要永久删除这份作业吗？")) return;
-
-    try {
-      const { error } = await supabase.from('works').delete().eq('id', id);
-      if (error) throw error;
-      alert("删除成功");
-      setSelectedWork(null);
-      fetchWorks();
-    } catch (error: any) { alert("删除失败: " + error.message); }
+    if (!window.confirm("确认删除？")) return;
+    const { error } = await supabase.from('works').delete().eq('id', id);
+    if (!error) { setSelectedWork(null); fetchWorks(); }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -103,7 +126,7 @@ function App() {
     };
 
     if (!files.image || !files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传封面视频、演示视频和画册图片");
+      alert("请完整上传！");
       setIsSubmitting(false);
       return;
     }
@@ -111,17 +134,16 @@ function App() {
     try {
       const uploadFile = async (file: File) => {
         const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
-        const { error: uploadError } = await supabase.storage.from('works-images').upload(fileName, file);
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from('works-images').getPublicUrl(fileName);
-        return data.publicUrl;
+        const { error } = await supabase.storage.from('works-images').upload(fileName, file);
+        if (error) throw error;
+        return supabase.storage.from('works-images').getPublicUrl(fileName).data.publicUrl;
       };
 
       const imageUrl = await uploadFile(files.image); 
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
 
-      const { error: insertError } = await supabase.from('works').insert([{
+      const { error } = await supabase.from('works').insert([{
         name: formData.get('name'),
         student_id: formData.get('student_id'),
         window_type: formData.get('window_type'),
@@ -131,16 +153,8 @@ function App() {
         album_images: albumUrls 
       }]);
       
-      if (insertError) throw insertError;
-      alert("发布成功！");
-      fetchWorks(); 
-      setShowUpload(false); 
-      setContentMode('works');
-    } catch (error: any) { 
-      alert("提交失败：" + error.message); 
-    } finally { 
-      setIsSubmitting(false); 
-    }
+      if (!error) { fetchWorks(); setShowUpload(false); setContentMode('works'); }
+    } catch (error: any) { alert("失败：" + error.message); } finally { setIsSubmitting(false); }
   };
 
   const getWindowStyle = (type: string): React.CSSProperties => {
@@ -159,8 +173,7 @@ function App() {
     const isVideo = /\.(mp4|mov|webm|ogg|m4v)/i.test(url.split('?')[0]);
     if (isVideo) {
       return (
-        <video 
-          key={url} src={url} 
+        <video key={url} src={url} 
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} 
           autoPlay muted loop playsInline preload="metadata"
         />
@@ -206,21 +219,21 @@ function App() {
 
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
-        {/* 🌟 新增：山水图窗 点击项 */}
+        {/* 🌟 山水画谱 点击项 */}
         <section style={{ marginBottom: '25px' }}>
           <h2 
-            onClick={() => setContentMode('window-view')} 
+            onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
             style={{ 
               fontSize: '20px', 
               fontStyle: 'italic', 
               fontWeight: 'bold', 
               marginBottom: '8px', 
               cursor: 'pointer',
-              color: contentMode === 'window-view' ? '#333' : '#000',
-              textDecoration: contentMode === 'window-view' ? 'underline' : 'none'
+              color: contentMode === 'manual-view' ? '#333' : '#000',
+              textDecoration: contentMode === 'manual-view' ? 'underline' : 'none'
             }}
           >
-            山水图窗
+            山水画谱
           </h2>
         </section>
 
@@ -292,13 +305,28 @@ function App() {
           </div>
         )}
 
-        {/* 🌟 山水图窗 内容区 */}
-        {contentMode === 'window-view' && (
-          <div style={{ padding: '40px 60px' }}>
-            <h2 style={pageH}>· 山水图窗</h2>
-            <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '4px', lineHeight: '2', minHeight: '60vh' }}>
-              <p style={{ color: '#666' }}>此处可展示模型或图窗相关成果...</p>
-              {/* 您可以在此处添加具体的图片或模型展示代码 */}
+        {/* 🌟 山水画谱 内容区 (实现左右翻页) */}
+        {contentMode === 'manual-view' && (
+          <div style={{ padding: '40px 60px', boxSizing: 'border-box', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <h2 style={pageH}>· 山水画谱</h2>
+            <div style={{ 
+              backgroundColor: '#fff', padding: '20px', borderRadius: '4px', 
+              boxSizing: 'border-box', flex: 1, display: 'flex', flexDirection: 'column', 
+              alignItems: 'center', justifyContent: 'center', position: 'relative' 
+            }}>
+              <button style={{ ...flipBtnS, left: '20px' }} onClick={() => changeManualPage(-1)}>&#10094;</button>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <img 
+                  key={currentManualPage}
+                  src={MANUAL_IMAGES[currentManualPage]} 
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                  alt={`画谱第 ${currentManualPage + 1} 页`} 
+                />
+              </div>
+              <button style={{ ...flipBtnS, right: '20px' }} onClick={() => changeManualPage(1)}>&#10095;</button>
+              <div style={{ position: 'absolute', bottom: '15px', fontSize: '14px', color: '#999', fontWeight: 'bold' }}>
+                {currentManualPage + 1} / {MANUAL_IMAGES.length}
+              </div>
             </div>
           </div>
         )}
