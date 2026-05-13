@@ -11,7 +11,7 @@ const iS: React.CSSProperties = { width: '100%', padding: '12px', marginBottom: 
 const uB: React.CSSProperties = { marginBottom: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', fontSize: '11px' };
 
 // ==========================================
-// 2. 课程内容锁定区 (已移除课程安排)
+// 2. 课程内容锁定区
 // ==========================================
 const BASIC_INFO = (
   <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '1.8', color: '#666', marginLeft: '5px' }}>
@@ -48,7 +48,8 @@ interface Work {
 
 function App() {
   const [page, setPage] = useState<'home' | 'gallery'>('home');
-  const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal'>('works');
+  // 增加 'window-view' 模式
+  const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal' | 'window-view'>('works');
   const [showUpload, setShowUpload] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -205,8 +206,35 @@ function App() {
 
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
+        {/* 🌟 新增：山水图窗 点击项 */}
+        <section style={{ marginBottom: '25px' }}>
+          <h2 
+            onClick={() => setContentMode('window-view')} 
+            style={{ 
+              fontSize: '20px', 
+              fontStyle: 'italic', 
+              fontWeight: 'bold', 
+              marginBottom: '8px', 
+              cursor: 'pointer',
+              color: contentMode === 'window-view' ? '#333' : '#000',
+              textDecoration: contentMode === 'window-view' ? 'underline' : 'none'
+            }}
+          >
+            山水图窗
+          </h2>
+        </section>
+
+        <section style={{ marginBottom: '25px' }}>
+          <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
+          <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
+            <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none', color: contentMode === 'works' ? '#333' : '#666' }}>• 作业展示</li>
+            <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline', color: '#666' }}>• 作业提交</li>
+          </ul>
+        </section>
+
         {contentMode === 'works' && (
           <>
+            <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
             <section style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>学生姓名</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 0' }}>
@@ -239,14 +267,7 @@ function App() {
           </>
         )}
 
-        <section style={{ marginBottom: '25px' }}>
-          <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
-          <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
-            <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none', color: contentMode === 'works' ? '#333' : '#666' }}>• 作业展示</li>
-            <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline', color: '#666' }}>• 作业提交</li>
-          </ul>
-        </section>
-        <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px' }}>返回封面</button>
+        <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px', marginTop: '20px' }}>返回封面</button>
       </div>
 
       <div style={{ marginLeft: '25%', flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: '#f9f9f9', boxSizing: 'border-box' }}>
@@ -267,6 +288,17 @@ function App() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 🌟 山水图窗 内容区 */}
+        {contentMode === 'window-view' && (
+          <div style={{ padding: '40px 60px' }}>
+            <h2 style={pageH}>· 山水图窗</h2>
+            <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '4px', lineHeight: '2', minHeight: '60vh' }}>
+              <p style={{ color: '#666' }}>此处可展示模型或图窗相关成果...</p>
+              {/* 您可以在此处添加具体的图片或模型展示代码 */}
             </div>
           </div>
         )}
