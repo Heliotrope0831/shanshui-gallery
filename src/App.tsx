@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // ==========================================
-// 1. 样式锁定区 (完全还原最早版本)
+// 1. 样式锁定区 (完全还原最初版本)
 // ==========================================
 const sh: React.CSSProperties = { fontSize: '16px', marginBottom: '15px', borderLeft: '4px solid #000', paddingLeft: '10px' };
 const imgBox: React.CSSProperties = { backgroundColor: '#fff', padding: '30px', border: '1px solid #ddd', marginBottom: '20px' };
@@ -18,7 +18,7 @@ const flipBtnS: React.CSSProperties = {
 };
 
 // ==========================================
-// 2. 课程内容锁定区 (完全还原最早版本)
+// 2. 课程内容锁定区 (完全还原)
 // ==========================================
 const BASIC_INFO = (
   <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '1.8', color: '#666', marginLeft: '5px' }}>
@@ -34,12 +34,11 @@ const COURSE_GOAL = (
     <p style={{ marginBottom: '20px' }}><b>1. 知识方面：</b>建立对于中国传统山水的基本元素、构图原则，以及中国古典园林空间特征、组织方式的初步认识。在此基础上培养基本的空间阅读能力和审美能力。</p>
     <p style={{ marginBottom: '20px' }}><b>2. 操作方面：</b>通过“设计工作室”式教学法，强调“从做中学”。在动手操作的过程中学习中国传统山水空间基本知识、培养空间美学素养。同时，通过“设计思维”将理论认知进行融合，转化为动手操作的方法，最终以设计实物展示学习成果。</p>
     <p style={{ marginBottom: '20px' }}><b>3. 技法方面：</b>掌握基本的中国传统山水构图技巧，模型制作和摄影方法。通过模型以及模型照片表达设计概念，了解从“图像”到“空间”，从二维到三维的设计推进方式。</p>
-    <p style={{ marginBottom: '20px' }}><b>4. 多专业融合：</b>利用学生多专业背景，鼓励学生在空间美学学习和设计创作过程中寻找与自己专业的接口。通过这个课程，各专业学生可以了解他们可以在哪些方面对我们的生存环境的可持续性发展作出贡献。</p>
-    <p><b>5. 课程思政方面：</b>通过建立基本的对于中国传统山水空间的审美认识，增强学生对于中国传统山水文化的理解，提升中华文化自信。并通过课程不同阶段的练习，培养学生探索传承创新中国传统文化的主动性和责任感。</p>
+    <p style={{ marginBottom: '20px' }}><b>4. 多专业融合：</b>利用学生多专业背景，鼓励学生在空间美学学习和设计创作过程中寻找与自己专业的接口。</p>
+    <p><b>5. 课程思政方面：</b>通过建立基本的对于中国传统山水空间的审美认识，增强学生对于中国传统山水文化的理解，提升中华文化自信。</p>
   </div>
 );
 
-// 画谱 30 张图片生成
 const MANUAL_IMAGES = Array.from({ length: 30 }, (_, i) => 
   `/manual_${(i + 1).toString().padStart(2, '0')}.jpg`
 );
@@ -68,18 +67,6 @@ function App() {
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [filterName, setFilterName] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('全部');
-
-  // 🌟 核心：手机端整体缩放逻辑
-  useEffect(() => {
-    // 强制视口宽度为 1280px，使手机浏览器自动等比缩小排版
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (meta) {
-      meta.setAttribute('content', 'width=1280, initial-scale=0.1, user-scalable=yes');
-    }
-    return () => {
-      if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1.0');
-    };
-  }, []);
 
   const fetchWorks = async () => {
     const { data } = await supabase.from('works').select('*').order('created_at', { ascending: false });
@@ -167,10 +154,12 @@ function App() {
 
   if (page === 'home') {
     return (
-      <div style={{ display: 'flex', width: '1280px', height: '100vh', backgroundColor: '#fff', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', height: '100vh', backgroundColor: '#fff', overflow: 'hidden' }}>
         <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 8%' }}>
           <h1 style={{ fontSize: '100px', fontWeight: 'bold', margin: '0', letterSpacing: '10px' }}>山水图窗</h1>
+          
           <button onClick={() => { setPage('gallery'); setContentMode('works'); }} style={{ margin: '40px 0', width: 'fit-content', padding: '12px 50px', backgroundColor: '#f5f5f5', border: 'none', fontSize: '20px', cursor: 'pointer' }}>点击进入</button>
+          
           <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#666' }}>
             <p style={{ margin: '0', fontWeight: 'bold', color: '#000' }}>《艺术与设计思维专题5：中国传统山水的意象与空间》</p>
             <p style={{ margin: '0' }}>Topic 5: The Imagery and Space of Chinese Traditional Landscape</p>
@@ -182,9 +171,9 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', width: '1280px', minHeight: '100vh', backgroundColor: '#fff', fontFamily: 'sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* 侧边栏 - 完全还原固定排版 */}
+      {/* 侧边栏 - 还原原始 25% 宽度固定定位 */}
       <div style={{ width: '25%', padding: '30px', position: 'fixed', height: '100vh', borderRight: '1px solid #eee', overflowY: 'auto', boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '32px', margin: '0 0 25px 0', fontWeight: 'bold', cursor: 'pointer', borderBottom: '1px solid #000', paddingBottom:'10px' }} onClick={() => { setContentMode('works'); setFilterName(null); setFilterType('全部'); }}>山水图窗</h1>
         <section style={{ marginBottom: '25px' }}>{BASIC_INFO}</section>
@@ -209,7 +198,7 @@ function App() {
         <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px', marginTop: '20px' }}>返回封面</button>
       </div>
 
-      {/* 内容区 */}
+      {/* 内容区 - 还原原始 25% 左边距流式布局 */}
       <div style={{ marginLeft: '25%', flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: '#f9f9f9', boxSizing: 'border-box' }}>
         
         {contentMode === 'works' && (
@@ -256,7 +245,7 @@ function App() {
       </div>
 
       {selectedWork && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '1280px', height: '100vh', backgroundColor: '#fff', zIndex: 2000, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#fff', zIndex: 2000, overflowY: 'auto' }}>
           <button onClick={() => setSelectedWork(null)} style={{ position: 'fixed', top: '25px', right: '40px', fontSize: '24px', border: 'none', background: 'none', cursor: 'pointer', zIndex: 2100 }}>✕</button>
           <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 20px' }}>
             <h2 style={{ textAlign: 'center', marginBottom: '60px' }}>{selectedWork.name} / {selectedWork.student_id}</h2>
@@ -275,7 +264,7 @@ function App() {
       )}
 
       {showUpload && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '1280px', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <div style={{ backgroundColor: '#fff', padding: '40px', width: '450px', borderRadius: '24px' }}>
              <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>提交成果总结</h2>
              <form onSubmit={handleSubmit}>
