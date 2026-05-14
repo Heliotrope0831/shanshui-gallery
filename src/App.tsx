@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 
 // ==========================================
-// 1. 样式锁定区 (完全恢复最初的流式布局)
+// 1. 样式锁定区
 // ==========================================
 const sh: React.CSSProperties = { fontSize: '16px', marginBottom: '15px', borderLeft: '4px solid #000', paddingLeft: '10px' };
 const imgBox: React.CSSProperties = { backgroundColor: '#fff', padding: '30px', border: '1px solid #ddd', marginBottom: '20px' };
@@ -10,6 +10,7 @@ const pageH: React.CSSProperties = { fontSize: '20px', fontWeight: 'bold', fontS
 const iS: React.CSSProperties = { width: '100%', padding: '12px', marginBottom: '15px', border: '1px solid #ddd', borderRadius: '8px', boxSizing: 'border-box' };
 const uB: React.CSSProperties = { marginBottom: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', fontSize: '11px' };
 
+// 翻页按钮样式
 const flipBtnS: React.CSSProperties = {
   position: 'absolute', top: '50%', transform: 'translateY(-50%)',
   backgroundColor: 'rgba(0,0,0,0.3)', color: '#fff', border: 'none',
@@ -32,14 +33,14 @@ const BASIC_INFO = (
 const COURSE_GOAL = (
   <div style={{ backgroundColor: '#fff', padding: '40px 50px', borderRadius: '4px', maxWidth: '1000px', lineHeight: '2.2', fontSize: '15px', color: '#333', textAlign: 'justify' }}>
     <p style={{ marginBottom: '20px' }}><b>1. 知识方面：</b>建立对于中国传统山水的基本元素、构图原则，以及中国古典园林空间特征、组织方式的初步认识。在此基础上培养基本的空间阅读能力和审美能力。</p>
-    <p style={{ marginBottom: '20px' }}><b>2. 操作方面：</b>通过“设计工作室”式教学法，强调“从做中学”。在动手操作的过程中学习中国传统山水空间基本知识、培养空间美学素养。</p>
+    <p style={{ marginBottom: '20px' }}><b>2. 操作方面：</b>通过“设计工作室”式教学法，强调“从做中学”。在动手操作的过程中学习中国传统山水空间基本知识、培养空间美学素养。同时，通过“设计思维”将理论认知进行融合，转化为动手操作的方法，最终以设计实物展示学习成果。</p>
     <p style={{ marginBottom: '20px' }}><b>3. 技法方面：</b>掌握基本的中国传统山水构图技巧，模型制作和摄影方法。通过模型以及模型照片表达设计概念，了解从“图像”到“空间”，从二维到三维的设计推进方式。</p>
-    <p style={{ marginBottom: '20px' }}><b>4. 多专业融合：</b>利用学生多专业背景，鼓励学生在空间美学学习和设计创作过程中寻找与自己专业的接口。</p>
-    <p><b>5. 课程思政方面：</b>通过建立基本的对于中国传统山水空间的审美认识，增强学生对于中国传统山水文化的理解，提升中华文化自信。</p>
+    <p style={{ marginBottom: '20px' }}><b>4. 多专业融合：</b>利用学生多专业背景，鼓励学生在空间美学学习和设计创作过程中寻找与自己专业的接口。通过这个课程，各专业学生可以了解他们可以在哪些方面对我们的生存环境的可可持续性发展作出贡献。</p>
+    <p><b>5. 课程思政方面：</b>通过建立基本的对于中国传统山水空间的审美认识，增强学生对于中国传统山水文化的理解，提升中华文化自信。并通过课程不同阶段的练习，培养学生探索传承创新中国传统文化的主动性和责任感。</p>
   </div>
 );
 
-// 画谱 30 张图片生成
+// 生成30张画谱图片路径
 const MANUAL_IMAGES = Array.from({ length: 30 }, (_, i) => 
   `/manual_${(i + 1).toString().padStart(2, '0')}.jpg`
 );
@@ -61,26 +62,15 @@ interface Work {
 function App() {
   const [page, setPage] = useState<'home' | 'gallery'>('home');
   const [contentMode, setContentMode] = useState<'works' | 'topic' | 'goal' | 'manual-view'>('works');
+  
   const [currentManualPage, setCurrentManualPage] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [works, setWorks] = useState<Work[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
+  
   const [filterName, setFilterName] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('全部');
-
-  // 🌟 关键：手机端自动缩放逻辑，不影响电脑端排版
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="viewport"]');
-    if (meta) {
-      // 当检测到是手机端时，强制以宽视口渲染实现等比缩小
-      if (window.innerWidth < 768) {
-        meta.setAttribute('content', 'width=1200, user-scalable=yes');
-      } else {
-        meta.setAttribute('content', 'width=device-width, initial-scale=1.0');
-      }
-    }
-  }, []);
 
   const fetchWorks = async () => {
     const { data } = await supabase.from('works').select('*').order('created_at', { ascending: false });
@@ -106,19 +96,35 @@ function App() {
     });
   };
 
+  const handleDelete = async (id: number) => {
+    const password = window.prompt("请输入管理员删除密码：");
+    if (password !== "admin123") { 
+      alert("密码错误！");
+      return;
+    }
+    if (!window.confirm("确认删除？")) return;
+    const { error } = await supabase.from('works').delete().eq('id', id);
+    if (!error) { setSelectedWork(null); fetchWorks(); }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
+    
     const formData = new FormData(e.currentTarget);
     const files = {
       image: (e.currentTarget.querySelector('input[name="imageFile"]') as HTMLInputElement).files?.[0],
       video: (e.currentTarget.querySelector('input[name="videoFile"]') as HTMLInputElement).files?.[0],
       albums: (e.currentTarget.querySelector('input[name="albumFiles"]') as HTMLInputElement).files
     };
+
     if (!files.image || !files.video || !files.albums || files.albums.length === 0) {
-      alert("请完整上传！"); setIsSubmitting(false); return;
+      alert("请完整上传！");
+      setIsSubmitting(false);
+      return;
     }
+
     try {
       const uploadFile = async (file: File) => {
         const fileName = `${Date.now()}_${file.name.replace(/[^a-z0-9.]/gi, '_')}`;
@@ -126,14 +132,21 @@ function App() {
         if (error) throw error;
         return supabase.storage.from('works-images').getPublicUrl(fileName).data.publicUrl;
       };
+
       const imageUrl = await uploadFile(files.image); 
       const videoUrl = await uploadFile(files.video);
       const albumUrls = await Promise.all(Array.from(files.albums).map(file => uploadFile(file)));
+
       const { error } = await supabase.from('works').insert([{
-        name: formData.get('name'), student_id: formData.get('student_id'),
-        window_type: formData.get('window_type'), poem: formData.get('poem'),
-        image_url: imageUrl, video_url: videoUrl, album_images: albumUrls 
+        name: formData.get('name'),
+        student_id: formData.get('student_id'),
+        window_type: formData.get('window_type'),
+        poem: formData.get('poem'),
+        image_url: imageUrl, 
+        video_url: videoUrl, 
+        album_images: albumUrls 
       }]);
+      
       if (!error) { fetchWorks(); setShowUpload(false); setContentMode('works'); }
     } catch (error: any) { alert("失败：" + error.message); } finally { setIsSubmitting(false); }
   };
@@ -153,7 +166,12 @@ function App() {
     if (!url) return <div style={{width:'100%', height:'100%', backgroundColor:'#eee'}} />;
     const isVideo = /\.(mp4|mov|webm|ogg|m4v)/i.test(url.split('?')[0]);
     if (isVideo) {
-      return <video key={url} src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} autoPlay muted loop playsInline preload="metadata" />;
+      return (
+        <video key={url} src={url} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }} 
+          autoPlay muted loop playsInline preload="metadata"
+        />
+      );
     }
     return <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="artwork" 
       onError={(e) => {
@@ -171,7 +189,10 @@ function App() {
       <div style={{ display: 'flex', height: '100vh', backgroundColor: '#fff', overflow: 'hidden' }}>
         <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 8%' }}>
           <h1 style={{ fontSize: '100px', fontWeight: 'bold', margin: '0', letterSpacing: '10px' }}>山水图窗</h1>
+          
+          {/* 点击进入按钮调整至此处：位于标题和描述之间 */}
           <button onClick={() => { setPage('gallery'); setContentMode('works'); }} style={{ margin: '40px 0', width: 'fit-content', padding: '12px 50px', backgroundColor: '#f5f5f5', border: 'none', fontSize: '20px', cursor: 'pointer' }}>点击进入</button>
+          
           <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#666' }}>
             <p style={{ margin: '0', fontWeight: 'bold', color: '#000' }}>《艺术与设计思维专题5：中国传统山水的意象与空间》</p>
             <p style={{ margin: '0' }}>Topic 5: The Imagery and Space of Chinese Traditional Landscape</p>
@@ -185,32 +206,87 @@ function App() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff', fontFamily: 'sans-serif' }}>
       
-      {/* 侧边栏 - 恢复原始 25% 宽度固定定位 */}
       <div style={{ width: '25%', padding: '30px', position: 'fixed', height: '100vh', borderRight: '1px solid #eee', overflowY: 'auto', boxSizing: 'border-box' }}>
         <h1 style={{ fontSize: '32px', margin: '0 0 25px 0', fontWeight: 'bold', cursor: 'pointer', borderBottom: '1px solid #000', paddingBottom:'10px' }} onClick={() => { setContentMode('works'); setFilterName(null); setFilterType('全部'); }}>山水图窗</h1>
-        <section style={{ marginBottom: '25px' }}>{BASIC_INFO}</section>
+        
+        <section style={{ marginBottom: '25px' }}>
+          <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '10px' }}>基本信息</h2>
+          {BASIC_INFO}
+        </section>
+
         <section style={{ marginBottom: '25px' }}>
           <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>课程介绍</h2>
           <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2', color: '#666' }}>
-            <li onClick={() => setContentMode('topic')} style={{ cursor: 'pointer', textDecoration: contentMode === 'topic' ? 'underline' : 'none' }}>• 选题依据</li>
-            <li onClick={() => setContentMode('goal')} style={{ cursor: 'pointer', textDecoration: contentMode === 'goal' ? 'underline' : 'none' }}>• 课程目标</li>
+            <li onClick={() => setContentMode('topic')} style={{ cursor: 'pointer', textDecoration: contentMode === 'topic' ? 'underline' : 'none', color: contentMode === 'topic' ? '#333' : '#666' }}>• 选题依据</li>
+            <li onClick={() => setContentMode('goal')} style={{ cursor: 'pointer', textDecoration: contentMode === 'goal' ? 'underline' : 'none', color: contentMode === 'goal' ? '#333' : '#666' }}>• 课程目标</li>
           </ul>
         </section>
+
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+
         <section style={{ marginBottom: '25px' }}>
-          <h2 onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px', cursor: 'pointer', textDecoration: contentMode === 'manual-view' ? 'underline' : 'none' }}>山水画谱</h2>
+          <h2 
+            onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
+            style={{ 
+              fontSize: '20px', 
+              fontStyle: 'italic', 
+              fontWeight: 'bold', 
+              marginBottom: '8px', 
+              cursor: 'pointer',
+              color: contentMode === 'manual-view' ? '#333' : '#000',
+              textDecoration: contentMode === 'manual-view' ? 'underline' : 'none'
+            }}
+          >
+            山水画谱
+          </h2>
         </section>
+
         <section style={{ marginBottom: '25px' }}>
           <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
           <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
-            <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none' }}>• 作业展示</li>
+            <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none', color: contentMode === 'works' ? '#333' : '#666' }}>• 作业展示</li>
             <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline', color: '#666' }}>• 作业提交</li>
           </ul>
         </section>
+
+        {contentMode === 'works' && (
+          <>
+            <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+            <section style={{ marginBottom: '30px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>学生姓名</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 0' }}>
+                <div 
+                  onClick={() => { setFilterName(null); setFilterType('全部'); }} 
+                  style={{ width: '33.33%', cursor: 'pointer', fontSize: '13px', color: filterName === null ? '#333' : '#999', paddingRight: '5px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  全部学生
+                </div>
+                {studentNames.map(name => (
+                  <div 
+                    key={name} title={name} 
+                    onClick={() => { setFilterName(name); setFilterType('全部'); }} 
+                    style={{ width: '33.33%', cursor: 'pointer', fontSize: '13px', color: filterName === name ? '#333' : '#999', paddingRight: '5px', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                  >
+                    {name}
+                  </div>
+                ))}
+              </div>
+            </section>
+            
+            <section style={{ marginBottom: '30px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '15px' }}>窗型筛选</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {['全部', '扇面', '圆形团扇', '横长册页', '纵长立轴'].map(type => (
+                  <button key={type} onClick={() => { setFilterType(type); setFilterName(null); }} style={{ padding: '8px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: filterType === type ? '#333' : '#fff', color: filterType === type ? '#fff' : '#666', cursor: 'pointer', fontSize: '11px' }}>{type}</button>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
         <button onClick={() => setPage('home')} style={{ background: 'none', border: '1px solid #000', padding: '6px 15px', cursor: 'pointer', fontSize: '11px', marginTop: '20px' }}>返回封面</button>
       </div>
 
-      {/* 内容区 - 恢复原始 25% 左边距 */}
       <div style={{ marginLeft: '25%', flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: '#f9f9f9', boxSizing: 'border-box' }}>
         
         {contentMode === 'works' && (
@@ -218,12 +294,14 @@ function App() {
             <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: '13px', color: '#999' }}>找到 {filteredWorks.length} 件相关作品</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '30px 15px' }}>
               {filteredWorks.map((work) => (
-                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center' }}>
+                <div key={work.id} onClick={() => setSelectedWork(work)} style={{ cursor: 'pointer', textAlign: 'center', transition: 'transform 0.2s' }}>
                   <div style={{ height: '180px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: '8px' }}>
                     <div style={getWindowStyle(work.window_type)}>{renderItemMedia(work.image_url)}</div>
                   </div>
                   <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                     <p style={{ fontWeight: 'bold', margin: '0', color: '#222', fontSize: '13px' }}>{work.name} / {work.student_id}</p>
+                    <p style={{ color: '#999', margin: '2px 0' }}>{work.window_type}</p>
+                    <p style={{ fontStyle: 'italic', color: '#666', margin: '0', padding: '0 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{work.poem}</p>
                   </div>
                 </div>
               ))}
@@ -234,14 +312,18 @@ function App() {
         {contentMode === 'manual-view' && (
           <div style={{ padding: '40px 60px', boxSizing: 'border-box', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <h2 style={pageH}>· 山水画谱</h2>
-            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '4px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div style={{ 
+              backgroundColor: '#fff', padding: '20px', borderRadius: '4px', 
+              boxSizing: 'border-box', flex: 1, display: 'flex', flexDirection: 'column', 
+              alignItems: 'center', justifyContent: 'center', position: 'relative' 
+            }}>
               <button style={{ ...flipBtnS, left: '20px' }} onClick={() => changeManualPage(-1)}>&#10094;</button>
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {renderItemMedia(MANUAL_IMAGES[currentManualPage])}
               </div>
               <button style={{ ...flipBtnS, right: '20px' }} onClick={() => changeManualPage(1)}>&#10095;</button>
               <div style={{ position: 'absolute', bottom: '15px', fontSize: '14px', color: '#999', fontWeight: 'bold' }}>
-                {currentManualPage + 1} / 30
+                {currentManualPage + 1} / {MANUAL_IMAGES.length}
               </div>
             </div>
           </div>
@@ -258,26 +340,36 @@ function App() {
 
       {selectedWork && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#fff', zIndex: 2000, overflowY: 'auto' }}>
-          <button onClick={() => setSelectedWork(null)} style={{ position: 'fixed', top: '25px', right: '40px', fontSize: '24px', border: 'none', background: 'none', cursor: 'pointer', zIndex: 2100 }}>✕</button>
+          <div style={{ position: 'fixed', top: '25px', right: '40px', display: 'flex', gap: '20px', alignItems: 'center', zIndex: 2100 }}>
+            {window.location.search.includes('admin=true') && (
+              <button onClick={() => handleDelete(selectedWork.id!)} style={{ padding: '6px 12px', backgroundColor: '#f0f0f0', color: '#999', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>删除该作业</button>
+            )}
+            <button onClick={() => setSelectedWork(null)} style={{ fontSize: '24px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>✕</button>
+          </div>
           <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '80px 20px' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '60px' }}>{selectedWork.name} / {selectedWork.student_id}</h2>
-            {selectedWork.album_images.map((url, i) => (
-              <div key={i} style={{ position: 'relative', width: '100%', marginBottom: '40px' }}>
-                 <img src={url} style={{ width: '100%', display: 'block' }} alt="album" />
-                 {i === 6 && (
-                   <div style={{ position: 'absolute', top: '15%', left: '40%', width: '55%', height: '72%' }}>
-                      <video src={selectedWork.video_url} controls style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                   </div>
-                 )}
-              </div>
-            ))}
+            <header style={{ textAlign: 'center', marginBottom: '60px' }}>
+              <h2 style={{ fontSize: '32px' }}>{selectedWork.name} / {selectedWork.student_id}</h2>
+              <p style={{ color: '#888', fontStyle: 'italic' }}>{selectedWork.poem}</p>
+            </header>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+              {Array.isArray(selectedWork.album_images) && selectedWork.album_images.map((url, i) => (
+                <div key={i} style={{ position: 'relative', width: '100%', backgroundColor: '#f9f9f9' }}>
+                   <img src={url} style={{ width: '100%', display: 'block', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' }} alt={`页码${i+1}`} />
+                   {i === 6 && (
+                     <div style={{ position: 'absolute', top: '15%', left: '40%', width: '55%', height: '72%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                        <video src={selectedWork.video_url} controls autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                     </div>
+                   )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {showUpload && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
-          <div style={{ backgroundColor: '#fff', padding: '40px', width: '450px', borderRadius: '24px' }}>
+          <div style={{ backgroundColor: '#fff', padding: '40px', width: '450px', borderRadius: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
              <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>提交成果总结</h2>
              <form onSubmit={handleSubmit}>
                 <input name="name" placeholder="姓名" required style={iS} />
@@ -286,11 +378,13 @@ function App() {
                 <select name="window_type" style={iS} required>
                   <option value="扇面">扇面</option><option value="圆形团扇">圆形团扇</option><option value="横长册页">横长册页</option><option value="纵长立轴">纵长立轴</option>
                 </select>
-                <div style={uB}><p>封面展示 (视频/图片)</p><input type="file" name="imageFile" accept="video/*,image/*" required /></div>
-                <div style={uB}><p>画册页 (多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
-                <div style={uB}><p>演示视频</p><input type="file" name="videoFile" accept="video/*" required /></div>
-                <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '16px', background: isSubmitting ? '#999' : '#000', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '12px' }}>{isSubmitting ? '正在上传...' : '确认发布'}</button>
-                <button type="button" onClick={()=>setShowUpload(false)} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', color: '#999' }}>取消</button>
+                <div style={uB}><p>封面视频 (支持图片或视频)</p><input type="file" name="imageFile" accept="video/*,image/*" required /></div>
+                <div style={uB}><p>画册页 (确保第7张为带红框开口的底图，多选)</p><input type="file" name="albumFiles" accept="image/*" multiple required /></div>
+                <div style={uB}><p>演示视频 (用于详情页嵌入)</p><input type="file" name="videoFile" accept="video/*" required /></div>
+                <button type="submit" disabled={isSubmitting} style={{ width: '100%', padding: '16px', background: isSubmitting ? '#999' : '#000', color: '#fff', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer', fontWeight: 'bold', borderRadius: '12px' }}>
+                  {isSubmitting ? '正在上传中...' : '确认发布'}
+                </button>
+                <button type="button" onClick={()=>setShowUpload(false)} style={{ width: '100%', marginTop: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#999' }}>取消</button>
              </form>
           </div>
         </div>
