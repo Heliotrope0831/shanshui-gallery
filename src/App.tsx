@@ -189,10 +189,7 @@ function App() {
       <div style={{ display: 'flex', height: '100vh', backgroundColor: '#fff', overflow: 'hidden' }}>
         <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '0 8%' }}>
           <h1 style={{ fontSize: '100px', fontWeight: 'bold', margin: '0', letterSpacing: '10px' }}>山水图窗</h1>
-          
-          {/* 点击进入按钮调整至此处：位于标题和描述之间 */}
           <button onClick={() => { setPage('gallery'); setContentMode('works'); }} style={{ margin: '40px 0', width: 'fit-content', padding: '12px 50px', backgroundColor: '#f5f5f5', border: 'none', fontSize: '20px', cursor: 'pointer' }}>点击进入</button>
-          
           <div style={{ fontSize: '14px', lineHeight: '1.8', color: '#666' }}>
             <p style={{ margin: '0', fontWeight: 'bold', color: '#000' }}>《艺术与设计思维专题5：中国传统山水的意象与空间》</p>
             <p style={{ margin: '0' }}>Topic 5: The Imagery and Space of Chinese Traditional Landscape</p>
@@ -224,11 +221,9 @@ function App() {
 
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
-        {/* 成果&展示 章节 */}
         <section style={{ marginBottom: '25px' }}>
           <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
           <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
-            {/* 山水画谱 移动至此处并调整格式 */}
             <li 
               onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
               style={{ 
