@@ -224,26 +224,21 @@ function App() {
 
         <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
 
-        <section style={{ marginBottom: '25px' }}>
-          <h2 
-            onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
-            style={{ 
-              fontSize: '20px', 
-              fontStyle: 'italic', 
-              fontWeight: 'bold', 
-              marginBottom: '8px', 
-              cursor: 'pointer',
-              color: contentMode === 'manual-view' ? '#333' : '#000',
-              textDecoration: contentMode === 'manual-view' ? 'underline' : 'none'
-            }}
-          >
-            山水画谱
-          </h2>
-        </section>
-
+        {/* 成果&展示 章节 */}
         <section style={{ marginBottom: '25px' }}>
           <h2 style={{ fontSize: '20px', fontStyle: 'italic', fontWeight: 'bold', marginBottom: '8px' }}>成果&展示</h2>
           <ul style={{ listStyle: 'none', padding: 0, fontSize: '12px', lineHeight: '2.2', color: '#333' }}>
+            {/* 山水画谱 移动至此处并调整格式 */}
+            <li 
+              onClick={() => { setContentMode('manual-view'); setCurrentManualPage(0); }} 
+              style={{ 
+                cursor: 'pointer', 
+                color: contentMode === 'manual-view' ? '#333' : '#666',
+                textDecoration: contentMode === 'manual-view' ? 'underline' : 'none'
+              }}
+            >
+              • 山水画谱
+            </li>
             <li onClick={() => setContentMode('works')} style={{ cursor: 'pointer', textDecoration: contentMode === 'works' ? 'underline' : 'none', color: contentMode === 'works' ? '#333' : '#666' }}>• 作业展示</li>
             <li onClick={() => setShowUpload(true)} style={{ cursor: 'pointer', textDecoration: 'underline', color: '#666' }}>• 作业提交</li>
           </ul>
